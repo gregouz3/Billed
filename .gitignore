@@ -1,0 +1,6 @@
+billed-front/node_modules
+billed-front/coverage
+
+billed-back/node_modules
+billed-back/coverage
+billed-back/database_test.sqlite
