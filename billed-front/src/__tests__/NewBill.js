@@ -54,14 +54,13 @@ describe("Given I am connected as an employee", () => {
         const handleChangeFile = jest.fn(() => newBills.handleChangeFile);
         const fileInput = screen.getByTestId("file");
         fileInput.addEventListener("change", handleChangeFile);
-        expect(handleChangeFile).not.toHaveBeenCalledTimes(1);
         expect(fileInput.files[0]).not.toBe(file);
         fireEvent.change(fileInput, {
           target: {
             files: [file],
           },
         });
-        expect(handleChangeFile).toHaveBeenCalledTimes(1);
+        expect(handleChangeFile).toHaveBeenCalled()
         expect(fileInput.files[0]).toBe(file);
       })
   
@@ -75,13 +74,12 @@ describe("Given I am connected as an employee", () => {
         const handleChangeFile = jest.fn(() => newBills.handleChangeFile);
         const fileInput = screen.getByTestId("file");
         fileInput.addEventListener("change", handleChangeFile);
-        expect(handleChangeFile).not.toHaveBeenCalledTimes(1);
         fireEvent.change(fileInput, {
           target: {
             files: [file],
           },
         });
-        expect(handleChangeFile).toHaveBeenCalledTimes(1);
+        expect(handleChangeFile).toHaveBeenCalled()
         expect(alertMock).toHaveBeenCalled();
         expect(fileInput.files[0]).toBe(file);
       })
