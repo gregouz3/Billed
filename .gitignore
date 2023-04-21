@@ -1,0 +1,4 @@
+billed-*/node_modules
+billed-*/coverageb
+
+billed-back/database_test.sqlite
