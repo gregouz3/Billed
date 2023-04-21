@@ -27,7 +27,7 @@ export default class NewBill {
     if (!allowedExtensions.includes(fileExtension)) {
       alert("Please upload a file with a valid extension: jpg, jpeg or png");
       return;
-    }
+    } 
     formData.append('file', file)
     formData.append('email', email)
     this.store

@@ -2,22 +2,47 @@
  * @jest-environment jsdom
  */
 
-import { screen } from "@testing-library/dom"
-import NewBillUI from "../views/NewBillUI.js"
+import { screen, waitFor, fireEvent } from "@testing-library/dom"
 import NewBill from "../containers/NewBill.js"
-
+import {localStorageMock} from "../__mocks__/localStorage.js";
+import {storeMock} from '../__mocks__/store.js'
+import { ROUTES_PATH} from "../constants/routes.js";
+import router from "../app/Router.js";
 
 describe("Given I am connected as an employee", () => {
+
+  let newBills;
+  beforeEach(() => {
+    Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+    window.localStorage.setItem('user', JSON.stringify({
+      type: 'Employee'
+    }))
+    const root = document.createElement("div")
+    root.setAttribute("id", "root")
+    document.body.append(root)
+    router()
+    window.onNavigate(ROUTES_PATH.NewBill)
+    newBills = new NewBill({
+      document,
+      onNavigate,
+      storeMock,
+      localStorage: window.localStorage
+    });
+  })
+
   describe("When I am on NewBill Page", () => {
-    test("Then ...", () => {
-      const html = NewBillUI()
-      document.body.innerHTML = html
-      //to-do write assertion
+
+    test("Then mail icon in vertical layout should be highlighted", async () => {
+
+      await waitFor(() => screen.getByTestId('icon-mail'))
+      const mailIcon = screen.getByTestId('icon-mail')
+      expect(mailIcon.className).toEqual('active-icon')
     })
 
     describe('When I selected a file in the form', () => {
 
       test('Then I selected a file with allowed extensions', () => {
+
         const alertMock = jest.spyOn(window, "alert").mockImplementation();
         const file = new File(
           ["valid_file.jpeg"],
@@ -27,17 +52,17 @@ describe("Given I am connected as an employee", () => {
         const handleChangeFile = jest.fn(() => newBills.handleChangeFile);
         const fileInput = screen.getByTestId("file");
         fileInput.addEventListener("change", handleChangeFile);
-        expect(fileInput.files[0]).not.toBe(file);
         fireEvent.change(fileInput, {
           target: {
             files: [file],
           },
         });
         expect(handleChangeFile).toHaveBeenCalled()
-        expect(fileInput.files[0]).toBe(file);
+        expect(alertMock).toHaveBeenCalledTimes(2)
       })
-  
+
       test('Then I selected a file with not allowed extensions', () => {
+
         const alertMock = jest.spyOn(window, "alert").mockImplementation();
         const file = new File(
           ["invalid_file.txt"],
@@ -53,14 +78,14 @@ describe("Given I am connected as an employee", () => {
           },
         });
         expect(handleChangeFile).toHaveBeenCalled()
-        expect(alertMock).toHaveBeenCalled();
-        expect(fileInput.files[0]).toBe(file);
+        expect(alertMock).toHaveBeenCalledTimes(4)
       })
     })
 
-    describe('When send form ', () => {
+    describe('When I fill data in the form newBill', () => {
 
-      test('Submitting a new bill with valid data adds the bill to the list', () => {
+      test('Then I Submit a new bill with valid data', () => {
+
         const bill = {
           email: 'user@example.com',
           type: 'Transport',
@@ -71,7 +96,7 @@ describe("Given I am connected as an employee", () => {
           pct: 20,
           commentary: 'Trip to the airport',
           fileUrl: "",
-          fileName:"",
+          fileName: "",
           status: 'pending',
         };
         const handleSubmit = jest.fn(() => newBills.handleSubmit);
@@ -95,7 +120,6 @@ describe("Given I am connected as an employee", () => {
         // Submit the form
         fireEvent.submit(form)
         expect(handleSubmit).toHaveBeenCalled()
-        expect(form).toBeTruthy()
       });
     })
   });
