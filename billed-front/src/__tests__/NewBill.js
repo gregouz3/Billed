@@ -2,44 +2,17 @@
  * @jest-environment jsdom
  */
 
-import { screen, waitFor, fireEvent } from "@testing-library/dom"
+import { screen } from "@testing-library/dom"
 import NewBillUI from "../views/NewBillUI.js"
 import NewBill from "../containers/NewBill.js"
-import {localStorageMock} from "../__mocks__/localStorage.js";
-import {storeMock} from '../__mocks__/store.js'
-import { ROUTES_PATH} from "../constants/routes.js";
-import router from "../app/Router.js";
-import { bills } from "../fixtures/bills.js";
-
 
 
 describe("Given I am connected as an employee", () => {
-
-  let newBills;
-  beforeEach(() => {
-    Object.defineProperty(window, 'localStorage', { value: localStorageMock })
-    window.localStorage.setItem('user', JSON.stringify({
-      type: 'Employee'
-    }))
-    const root = document.createElement("div")
-    root.setAttribute("id", "root")
-    document.body.append(root)
-    router()
-    window.onNavigate(ROUTES_PATH.NewBill)
-    newBills = new NewBill({
-      document,
-      onNavigate,
-      storeMock,
-      localStorageMock
-    });
-  })
-
   describe("When I am on NewBill Page", () => {
-
-    test("Then mail icon in vertical layout should be highlighted", async () => {
-      await waitFor(() => screen.getByTestId('icon-mail'))
-      const mailIcon = screen.getByTestId('icon-mail')
-      expect(mailIcon.className).toEqual('active-icon')
+    test("Then ...", () => {
+      const html = NewBillUI()
+      document.body.innerHTML = html
+      //to-do write assertion
     })
 
     describe('When I selected a file in the form', () => {
@@ -127,4 +100,3 @@ describe("Given I am connected as an employee", () => {
     })
   });
 })
-

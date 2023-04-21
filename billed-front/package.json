@@ -22,6 +22,7 @@
     "fetch": "^1.1.0",
     "global": "^4.4.0",
     "jquery": "^3.5.1",
+    "live-server": "^1.2.2",
     "path": "^0.12.7"
   },
   "devDependencies": {
