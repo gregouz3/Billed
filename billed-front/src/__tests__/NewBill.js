@@ -5,12 +5,15 @@
 import { screen, waitFor, fireEvent } from "@testing-library/dom"
 import NewBill from "../containers/NewBill.js"
 import {localStorageMock} from "../__mocks__/localStorage.js";
-import {storeMock} from '../__mocks__/store.js'
+import {mockStore} from '../__mocks__/store.js'
 import { ROUTES_PATH} from "../constants/routes.js";
+import { ROUTES } from "../constants/routes.js";
 import router from "../app/Router.js";
+import NewBillUI from "../views/NewBillUI.js";
+
+jest.mock("../app/Store", () => mockStore)
 
 describe("Given I am connected as an employee", () => {
-
   let newBills;
   beforeEach(() => {
     Object.defineProperty(window, 'localStorage', { value: localStorageMock })
@@ -21,28 +24,28 @@ describe("Given I am connected as an employee", () => {
     root.setAttribute("id", "root")
     document.body.append(root)
     router()
-    window.onNavigate(ROUTES_PATH.NewBill)
+    document.body.innerHTML = NewBillUI()
+    const onNavigate = (pathname) => {
+      document.body.innerHTML = ROUTES({ pathname })
+    }
     newBills = new NewBill({
       document,
       onNavigate,
-      storeMock,
-      localStorage: window.localStorage
+      store: mockStore,
+      localStorage: localStorageMock
     });
   })
 
   describe("When I am on NewBill Page", () => {
-
     test("Then mail icon in vertical layout should be highlighted", async () => {
-
+      window.onNavigate(ROUTES_PATH.NewBill)
       await waitFor(() => screen.getByTestId('icon-mail'))
       const mailIcon = screen.getByTestId('icon-mail')
       expect(mailIcon.className).toEqual('active-icon')
     })
 
     describe('When I selected a file in the form', () => {
-
       test('Then I selected a file with allowed extensions', () => {
-
         const alertMock = jest.spyOn(window, "alert").mockImplementation();
         const file = new File(
           ["valid_file.jpeg"],
@@ -58,11 +61,10 @@ describe("Given I am connected as an employee", () => {
           },
         });
         expect(handleChangeFile).toHaveBeenCalled()
-        expect(alertMock).toHaveBeenCalledTimes(2)
+        expect(alertMock).toHaveBeenCalledTimes(1)
       })
 
       test('Then I selected a file with not allowed extensions', () => {
-
         const alertMock = jest.spyOn(window, "alert").mockImplementation();
         const file = new File(
           ["invalid_file.txt"],
@@ -78,49 +80,20 @@ describe("Given I am connected as an employee", () => {
           },
         });
         expect(handleChangeFile).toHaveBeenCalled()
-        expect(alertMock).toHaveBeenCalledTimes(4)
+        expect(alertMock).toHaveBeenCalledTimes(2)
       })
     })
 
     describe('When I fill data in the form newBill', () => {
-
-      test('Then I Submit a new bill with valid data', () => {
-
-        const bill = {
-          email: 'user@example.com',
-          type: 'Transport',
-          name: 'Taxi',
-          amount: 20,
-          date: '2023-04-11',
-          vat: '0.20',
-          pct: 20,
-          commentary: 'Trip to the airport',
-          fileUrl: "",
-          fileName: "",
-          status: 'pending',
-        };
+      test('Then I submit form should lead to the bills page', () => {
         const handleSubmit = jest.fn(() => newBills.handleSubmit);
         const form = screen.getByTestId('form-new-bill');
         form.addEventListener("submit", handleSubmit);
-        const select = screen.getByTestId('expense-type');
-        const nameInput = screen.getByTestId('expense-name');
-        const amountInput = screen.getByTestId('amount');
-        const dateInput = screen.getByTestId('datepicker');
-        const vatInput = screen.getByTestId('vat');
-        const pctInput = screen.getByTestId('pct');
-        const commentaryInput = screen.getByTestId('commentary');
-        // Fill in the form fields with valid data
-        fireEvent.change(select, { target: { value: bill.type } });
-        fireEvent.change(nameInput, { target: { value: bill.name } });
-        fireEvent.change(amountInput, { target: { value: bill.amount } });
-        fireEvent.change(dateInput, { target: { value: bill.date } });
-        fireEvent.change(vatInput, { target: { value: bill.vat } });
-        fireEvent.change(pctInput, { target: { value: bill.pct } });
-        fireEvent.change(commentaryInput, { target: { value: bill.commentary } });
-        // Submit the form
         fireEvent.submit(form)
         expect(handleSubmit).toHaveBeenCalled()
+        expect(screen.getByText("Mes notes de frais")).toBeTruthy();
       });
     })
   });
 })
+

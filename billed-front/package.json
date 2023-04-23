@@ -23,7 +23,8 @@
     "global": "^4.4.0",
     "jquery": "^3.5.1",
     "live-server": "^1.2.2",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "prettier": "^2.8.8"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.10.4",
