@@ -15,27 +15,27 @@ import router from "../app/Router.js";
 jest.mock("../app/Store", () => mockStore)
 
 describe("Given I am connected as an employee", () => {
-  describe("When I am on Bills Page", () => {
-    let billsPage;
-    beforeEach(() => {
-      Object.defineProperty(window, 'localStorage', { value: localStorageMock })
-      window.localStorage.setItem('user', JSON.stringify({
-        type: 'Employee'
-      }))
-      const root = document.createElement("div")
-      root.setAttribute("id", "root")
-      document.body.append(root)
-      router()
-      const onNavigate = (pathname) => {
-        document.body.innerHTML = ROUTES({ pathname })
-      }
-      billsPage = new Bills({
-        document,
-        onNavigate,
-        store: mockStore,
-        localStorage: localStorageMock
-    });
-  })
+    describe("When I am on Bills Page", () => {
+      let billsPage;
+      beforeEach(() => {
+        Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+        window.localStorage.setItem('user', JSON.stringify({
+          type: 'Employee'
+        }))
+        const root = document.createElement("div")
+        root.setAttribute("id", "root")
+        document.body.append(root)
+        router()
+        const onNavigate = (pathname) => {
+          document.body.innerHTML = ROUTES({ pathname })
+        }
+        billsPage = new Bills({
+          document,
+          onNavigate,
+          store: mockStore,
+          localStorage: localStorageMock
+      });
+    })
 
     test("Then bill icon in vertical layout should be highlighted", async () => {
       window.onNavigate(ROUTES_PATH.Bills)
@@ -100,7 +100,7 @@ describe("Given I am connected as an employee", () => {
 })
 // test d'intégration GET
 describe("Given I am a user connected as Employee", () => {
-  describe("When I navigate to Dashboard", () => {
+  describe("When I navigate to Bills page", () => {
     test("fetches bills from mock API GET", async () => {
       localStorage.setItem("user", JSON.stringify({ type: "Employee", email: "a@a" }));
       const root = document.createElement("div")
