@@ -19,9 +19,6 @@ describe("Given I am connected as an employee", () => {
       "user",
       JSON.stringify({
         type: "Employee",
-        email: "employee@test.tld",
-        password: "employee",
-        status: "connected",
       })
     );
     const root = document.createElement("div")
