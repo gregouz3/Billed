@@ -72,7 +72,7 @@ describe("Given I am connected as an employee", () => {
             list: () => Promise.resolve(bill)
           })
         },
-        localStorage: window.localStorage
+        localStorage: localStorageMock
       })
       const result = await billsPage.getBills()
       expect(result).toEqual([{ id: 'bill1', date: 'invalid date', status: 'En attente' }])
