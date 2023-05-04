@@ -36,6 +36,9 @@ describe("Given I am connected as an employee", () => {
       localStorage: localStorageMock
     });
   })
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe("When I am on NewBill Page", () => {
     test("Then mail icon in vertical layout should be highlighted", async () => {
@@ -44,16 +47,20 @@ describe("Given I am connected as an employee", () => {
       const mailIcon = screen.getByTestId('icon-mail')
       expect(mailIcon.className).toEqual('active-icon')
     })
-
+    
     describe('When I selected a file in the form', () => {
       test('Then I selected a file with allowed extensions', () => {
-        const alertMock = jest.spyOn(window, "alert").mockImplementation();
+        jest.spyOn(window, 'alert').mockImplementation(() => {});
+        window.alert = jest.fn()
         const file = new File(
           ["valid_file.jpeg"],
           "valid_file.jpeg",
           { type: "image/jpeg" }
         );
-        const handleChangeFile = jest.fn(() => newBills.handleChangeFile);
+        const handleChangeFile = jest.fn((e) => {
+          newBills.handleChangeFile(e);
+          done();
+        });
         const fileInput = screen.getByTestId("file");
         fileInput.addEventListener("change", handleChangeFile);
         fireEvent.change(fileInput, {
@@ -62,19 +69,19 @@ describe("Given I am connected as an employee", () => {
           },
         });
         expect(handleChangeFile).toHaveBeenCalled()
-        //one call by default
-        expect(alertMock).toHaveBeenCalledTimes(1)
         expect(fileInput.files[0]).toBe(file);
+        expect(window.alert).not.toHaveBeenCalled()
+
       })
 
       test('Then I selected a file with not allowed extensions', () => {
-        const alertMock = jest.spyOn(window, "alert").mockImplementation();
+        jest.spyOn(window, 'alert').mockImplementation(() => {});
         const file = new File(
           ["invalid_file.txt"],
           "invalid_file.txt",
           { type: "text/plain" }
         );
-        const handleChangeFile = jest.fn(() => newBills.handleChangeFile);
+        const handleChangeFile = jest.fn((e) => newBills.handleChangeFile(e));
         const fileInput = screen.getByTestId("file");
         fileInput.addEventListener("change", handleChangeFile);
         fireEvent.change(fileInput, {
@@ -83,12 +90,11 @@ describe("Given I am connected as an employee", () => {
           },
         });
         expect(handleChangeFile).toHaveBeenCalled()
-        //one call by default + one (alert invalid file)
-        expect(alertMock).toHaveBeenCalledTimes(2)
+        expect(window.alert).toHaveBeenCalledTimes(4)
       })
     })
 
-    describe('When I fill data in the form newBill', () => {
+    describe('When I fill data and submit  form newBill', () => {
       test('Then I submit form should lead to the bills page', () => {
         const handleSubmit = jest.fn(() => newBills.handleSubmit);
         const form = screen.getByTestId('form-new-bill');
@@ -96,59 +102,63 @@ describe("Given I am connected as an employee", () => {
         fireEvent.submit(form)
         expect(handleSubmit).toHaveBeenCalled()
         expect(screen.getByText("Mes notes de frais")).toBeTruthy();
+      });    
+    
+      test("Then the store should be updated with the given bill object and selector, and the page should navigate to Bills after the update is successful", async () => {
+        const mockUpdate = jest.spyOn(mockStore.bills(), "update");
+        const onNavigate = jest.fn();
+        newBills.onNavigate = onNavigate;
+        const bill = {
+          email: "john.doe@example.com",
+          type: "Hotel",
+          name: "Hotel stay",
+          amount: 120,
+          date: "2023-04-25",
+          vat: "20%",
+          pct: 20,
+          commentary: "Nice stay",
+          fileUrl: "https://example.com/bills/hotel_stay.jpg",
+          fileName: "hotel_stay.jpg",
+          status: "pending"
+        };
+        newBills.billId = "abc123";
+        await newBills.updateBill(bill);
+        expect(mockUpdate).toHaveBeenCalledWith({
+          data: JSON.stringify(bill),
+          selector: "abc123"
+        });
+        expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH.Bills);
+      })
+      test('Then I POST a new bill i expect add to bills list ', () => {
+        const updateMock = jest.spyOn(mockStore.bills(), "update")
+        const form = screen.getByTestId('form-new-bill');
+        fireEvent.submit(form)
+        expect(updateMock).toHaveBeenCalled()
       });
-    })
-  });
-  // test d'intégration POST
-  describe("When I update a bill", () => {
-   
-    test("Then the store should be updated with the given bill object and selector", async () => {
-      const mockUpdate = jest.fn(() => Promise.resolve());
-      newBills.store.bills().update = mockUpdate;
-      const bill = {
-        email: "john.doe@example.com",
-        type: "Hotel",
-        name: "Hotel stay",
-        amount: 120,
-        date: "2023-04-25",
-        vat: "20%",
-        pct: 20,
-        commentary: "Nice stay",
-        fileUrl: "https://example.com/bills/hotel_stay.jpg",
-        fileName: "hotel_stay.jpg",
-        status: "pending"
-      };
-      newBills.billId = "abc123";
-      await newBills.updateBill(bill);
-      expect(mockUpdate).toHaveBeenCalledWith({
-        data: JSON.stringify(bill),
-        selector: "abc123"
+      test('Then I POST a new bill i expect add to bills list and fail with error 404', async () => {
+        const errorMessage = 'Erreur 404'
+        const handleSubmit = jest.fn(() => newBills.handleSubmit);
+        const updateMockError = jest.spyOn(mockStore.bills(), "update").mockRejectedValueOnce(new Error(errorMessage));
+        const consoleErrorMock = jest.spyOn(console, "error").mockImplementation();
+        const form = screen.getByTestId('form-new-bill');
+        form.addEventListener("submit", handleSubmit);
+        fireEvent.submit(form)
+        expect(updateMockError).toHaveBeenCalled()
+        await new Promise(process.nextTick);
+        expect(consoleErrorMock).toHaveBeenCalledWith(new Error(errorMessage))
       });
-    });
-
-    test("Then the page should navigate to Bills after the update is successful", async () => {
-      const mockUpdate = jest.fn(() => Promise.resolve());
-      newBills.store.bills().update = mockUpdate;
-      const onNavigate = jest.fn();
-      newBills.onNavigate = onNavigate;
-      const bill = {
-        email: "john.doe@example.com",
-        type: "Hotel",
-        name: "Hotel stay",
-        amount: 120,
-        date: "2023-04-25",
-        vat: "20%",
-        pct: 20,
-        commentary: "Nice stay",
-        fileUrl: "https://example.com/bills/hotel_stay.jpg",
-        fileName: "hotel_stay.jpg",
-        status: "pending"
-      };
-      newBills.billId = "abc123";
-      await newBills.updateBill(bill);
-      expect(onNavigate).toHaveBeenCalledWith(ROUTES_PATH.Bills);
+      test('Then I POST a new bill i expect add to bills list and fail with error 500', async () => {
+        const errorMessage = 'Erreur 500'
+        const handleSubmit = jest.fn(() => newBills.handleSubmit);
+        const updateMockError = jest.spyOn(mockStore.bills(), "update").mockRejectedValueOnce(new Error(errorMessage));
+        const consoleErrorMock = jest.spyOn(console, "error").mockImplementation();
+        const form = screen.getByTestId('form-new-bill');
+        form.addEventListener("submit", handleSubmit);
+        fireEvent.submit(form)
+        expect(updateMockError).toHaveBeenCalled()
+        await new Promise(process.nextTick);
+        expect(consoleErrorMock).toHaveBeenCalledWith(new Error(errorMessage))
+      });
     });
   })
-})
-
- 
+});

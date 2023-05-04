@@ -24,12 +24,13 @@ export default class NewBill {
     const fileExtension = fileName.split(".").pop().toLowerCase();
     const formData = new FormData()
     const email = JSON.parse(localStorage.getItem("user")).email
-    if (!allowedExtensions.includes(fileExtension)) {
-      alert("Please upload a file with a valid extension: jpg, jpeg or png");
-      return;
-    } 
     formData.append('file', file)
     formData.append('email', email)
+    if (!allowedExtensions.includes(fileExtension)) {
+      alert("Please upload a file with a valid extension: jpg, jpeg or png");
+      e.target.value = ""
+      return;
+    } 
     this.store
       .bills()
       .create({
@@ -43,7 +44,8 @@ export default class NewBill {
         this.billId = key
         this.fileUrl = fileUrl
         this.fileName = fileName
-      }).catch(error => console.error(error))
+      })
+      .catch(error => console.error(error))
   }
   handleSubmit = e => {
     e.preventDefault()
