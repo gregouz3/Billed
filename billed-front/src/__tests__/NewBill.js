@@ -49,48 +49,58 @@ describe("Given I am connected as an employee", () => {
     })
     
     describe('When I selected a file in the form', () => {
-      test('Then I selected a file with allowed extensions', () => {
-        jest.spyOn(window, 'alert').mockImplementation(() => {});
-        window.alert = jest.fn()
+      test('Then I selected a file with allowed extensions', async (done) => {
         const file = new File(
-          ["valid_file.jpeg"],
-          "valid_file.jpeg",
-          { type: "image/jpeg" }
+          ["valid_file.png"],
+          "valid_file.png",
+          { type: "image/png" }
         );
-        const handleChangeFile = jest.fn((e) => {
-          newBills.handleChangeFile(e);
-          done();
-        });
+        const handleChangeFile = jest.fn(async (e) => {
+          e.preventDefault();
+          await newBills.handleChangeFile(e)
+          done()
+        })
         const fileInput = screen.getByTestId("file");
         fileInput.addEventListener("change", handleChangeFile);
-        fireEvent.change(fileInput, {
-          target: {
-            files: [file],
-          },
-        });
+        fireEvent.change(fileInput, { target: { files: [file] } });
         expect(handleChangeFile).toHaveBeenCalled()
-        expect(fileInput.files[0]).toBe(file);
-        expect(window.alert).not.toHaveBeenCalled()
-
+        expect(fileInput.files[0]).toBe(file)
       })
 
-      test('Then I selected a file with not allowed extensions', () => {
-        jest.spyOn(window, 'alert').mockImplementation(() => {});
+      test('Then I selected a file with not allowed extensions', async () => {
         const file = new File(
           ["invalid_file.txt"],
           "invalid_file.txt",
           { type: "text/plain" }
         );
-        const handleChangeFile = jest.fn((e) => newBills.handleChangeFile(e));
+        const handleChangeFile = jest.fn(async (e) => {
+          e.preventDefault();
+          await newBills.handleChangeFile(e)
+        })    
         const fileInput = screen.getByTestId("file");
         fileInput.addEventListener("change", handleChangeFile);
-        fireEvent.change(fileInput, {
-          target: {
-            files: [file],
-          },
-        });
+        fireEvent.change(fileInput, { target: { files: [file] } });
         expect(handleChangeFile).toHaveBeenCalled()
-        expect(window.alert).toHaveBeenCalledTimes(4)
+        const errFeedback = screen.getByTestId('errorFile')
+        expect(errFeedback.textContent).toBe('Please upload a file with a valid extension: jpg, jpeg or png')
+        expect(handleChangeFile).toHaveBeenCalled()
+      })
+
+      test('Then error Api create file', async () => {
+        const file = new File(
+          ["invalid_file.txt"],
+          "invalid_file.txt",
+          { type: "text/plain" }
+        );
+        const errorMessage = 'Erreur File'
+        const fileInput = screen.getByTestId("file");
+        const fileMockError = jest.spyOn(mockStore.bills(), "create").mockRejectedValueOnce(new Error(errorMessage));
+        const consoleErrorMock = jest.spyOn(console, "error").mockImplementation();
+        fileInput.addEventListener("change", fileMockError);
+        fireEvent.change(fileInput, { target: { files: [file] } });
+        expect(fileMockError).toHaveBeenCalled()
+        await new Promise(process.nextTick);
+        expect(consoleErrorMock).toHaveBeenCalledWith(new Error(errorMessage))
       })
     })
 
