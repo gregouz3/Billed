@@ -15,6 +15,25 @@ export default class NewBill {
     this.billId = null
     new Logout({ document, localStorage, onNavigate })
   }
+  toogleError = (show = 1, e) => {
+    const inputFile = document.querySelector(`input[data-testid="file"]`);
+    inputFile.className = "form-control is-invalid"
+    const errFeedback = document.createElement("div")
+    errFeedback.setAttribute("data-testid", "errorFile");
+    errFeedback.className = "invalid-feedback";
+    errFeedback.textContent = "Please upload a file with a valid extension: jpg, jpeg or png"
+    const fileErrorText =  document.querySelectorAll(".invalid-feedback");
+    if (fileErrorText && fileErrorText.length) {
+        fileErrorText.forEach(element => {
+            element.remove()
+        });
+    }
+    if(show) {
+        // Display l'erreur
+        e.target.parentNode.append(errFeedback)
+        e.target.value = ""
+    }
+  }
   handleChangeFile = e => {
     e.preventDefault()
     const allowedExtensions = ["jpg", "jpeg", "png"];
@@ -24,13 +43,13 @@ export default class NewBill {
     const fileExtension = fileName.split(".").pop().toLowerCase();
     const formData = new FormData()
     const email = JSON.parse(localStorage.getItem("user")).email
-    if (!allowedExtensions.includes(fileExtension)) {
-      alert("Please upload a file with a valid extension: jpg, jpeg or png");
-      return;
-    }
     formData.append('file', file)
     formData.append('email', email)
-    this.store
+  
+    if (!allowedExtensions.includes(fileExtension)) {
+      this.toogleError(1, e)
+    } 
+      this.store
       .bills()
       .create({
         data: formData,
@@ -43,7 +62,8 @@ export default class NewBill {
         this.billId = key
         this.fileUrl = fileUrl
         this.fileName = fileName
-      }).catch(error => console.error(error))
+      })
+      .catch(error => console.error(error))
   }
   handleSubmit = e => {
     e.preventDefault()
