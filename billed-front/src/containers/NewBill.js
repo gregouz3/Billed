@@ -33,37 +33,42 @@ export default class NewBill {
         e.target.parentNode.append(errFeedback)
         e.target.value = ""
     }
-  }
-  handleChangeFile = e => {
-    e.preventDefault()
-    const allowedExtensions = ["jpg", "jpeg", "png"];
-    const file = this.document.querySelector(`input[data-testid="file"]`).files[0]
-    const filePath = e.target.value.split(/\\/g)
-    const fileName = filePath[filePath.length-1]
-    const fileExtension = fileName.split(".").pop().toLowerCase();
-    const formData = new FormData()
-    const email = JSON.parse(localStorage.getItem("user")).email
-    formData.append('file', file)
-    formData.append('email', email)
+}
+handleChangeFile = e => {
+  e.preventDefault();
+  const allowedExtensions = ["jpg", "jpeg", "png"];
+  const fileInput = this.document.querySelector(`input[data-testid="file"]`);
+  const file = fileInput.files[0];
+  const filePath = fileInput.value.split(/\\/g);
+  const fileName = filePath[filePath.length - 1];
+  const fileParts = fileName.split(".");
+  const fileExtension = fileParts[fileParts.length - 1].toLowerCase();
+  const formData = new FormData();
+  const email = JSON.parse(localStorage.getItem("user")).email;
   
-    if (!allowedExtensions.includes(fileExtension)) {
-      this.toogleError(1, e)
-    } 
-      this.store
-      .bills()
-      .create({
-        data: formData,
-        headers: {
-          noContentType: true
-        }
-      })
-      .then(({fileUrl, key}) => {
-        console.log(fileUrl)
-        this.billId = key
-        this.fileUrl = fileUrl
-        this.fileName = fileName
-      })
-      .catch(error => console.error(error))
+  formData.append("file", file);
+  formData.append("email", email);
+  const inputFile = document.querySelector(`input[data-testid="file"]`);
+  inputFile.className = "form-control blue-border";
+  if (!allowedExtensions.includes(fileExtension)) {
+    return this.toogleError(1, e);
+  }
+ 
+    this.store
+    .bills()
+    .create({
+      data: formData,
+      headers: {
+        noContentType: true
+      }
+    })
+    .then(({ fileUrl, key }) => {
+      console.log(fileUrl);
+      this.billId = key;
+      this.fileUrl = fileUrl;
+      this.fileName = fileName;
+    })
+    .catch(error => console.error(error));
   }
   handleSubmit = e => {
     e.preventDefault()
