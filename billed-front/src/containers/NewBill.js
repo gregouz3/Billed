@@ -45,7 +45,8 @@ export default class NewBill {
     const email = JSON.parse(localStorage.getItem("user")).email
     formData.append('file', file)
     formData.append('email', email)
-  
+    const inputFile = document.querySelector(`input[data-testid="file"]`);
+    inputFile.className = "form-control blue-border";
     if (!allowedExtensions.includes(fileExtension)) {
       this.toogleError(1, e)
     } 
