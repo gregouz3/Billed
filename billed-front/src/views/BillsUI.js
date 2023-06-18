@@ -18,10 +18,17 @@ const row = (bill) => {
     </tr>
     `)
   }
-
+/*
+const rows = (data) => {
+  return data.map(bill => row(bill)).join("");
+}
+const rows = (data) => {
+  return (data && data.length) ? data.map(bill => row(bill)).join("") : ""
+}
+*/
 const rows = (data) => {
   const sortedData = data && data.length ? data.sort((a, b) => new Date(b.date) - new Date(a.date)) : [];
-  return sortedData.map(bill => row(bill)).join("");
+return sortedData.map(bill => row(bill)).join(""); 
 }
 
 export default ({ data: bills, loading, error }) => {
